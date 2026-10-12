@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tareas MVC</title>
+    <link rel="stylesheet" href="src/styles/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mis Tareas</h1>
+        
+        <form id="form-tarea">
+            <input type="text" id="titulo" placeholder="Título de la tarea" required>
+            <input type="text" id="descripcion" placeholder="Descripción" required>
+            <button type="submit">Agregar Tarea</button>
+        </form>
+
+        <div class="controles">
+            <input type="text" id="buscador" placeholder="🔍 Buscar por título...">
+            <select id="filtro-estado">
+                <option value="todas">Todas</option>
+                <option value="pendientes">Pendientes</option>
+                <option value="completadas">Completadas</option>
+            </select>
+        </div>
+
+        <ul id="lista-tareas"></ul>
+    </div>
+
+    <script type="module" src="./dist/main.js"></script>
+</body>
+</html>
