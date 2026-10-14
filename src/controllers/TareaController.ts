@@ -5,7 +5,7 @@ import { StorageService } from '../services/StorageService.js';
 export class TareaController {
     private tareas: ITarea[];
     private terminoBusqueda: string = '';
-    private filtroActual: string = 'todas'; // Puede ser: 'todas', 'pendientes', 'completadas'
+    private filtroActual: string = 'todas';
 
     constructor(
         private view: TareaView,
@@ -16,56 +16,48 @@ export class TareaController {
         this.view.bindAgregarTarea(this.handleAgregarTarea.bind(this));
         this.view.bindEliminarTarea(this.handleEliminarTarea.bind(this));
         this.view.bindToggleTarea(this.handleToggleTarea.bind(this));
-        
-        // NUEVO: Vincular búsqueda y filtros
         this.view.bindBuscarTarea(this.handleBuscarTarea.bind(this));
         this.view.bindFiltrarTarea(this.handleFiltrarTarea.bind(this));
+        this.view.bindEliminarCompletadas(this.handleEliminarCompletadas.bind(this));
 
-        this.renderizarActualizado();
+        this.actualizarVistaGeneral();
     }
 
-    // NUEVO: Método centralizado que aplica filtros y búsqueda antes de mostrar
-    private renderizarActualizado() {
-        let tareasFiltradas = this.tareas;
+    private actualizarVistaGeneral() {
+        let tareasFiltradas = [...this.tareas];
 
-        // 1. Aplicar filtro de estado
         if (this.filtroActual === 'pendientes') {
             tareasFiltradas = tareasFiltradas.filter(t => !t.completada);
         } else if (this.filtroActual === 'completadas') {
             tareasFiltradas = tareasFiltradas.filter(t => t.completada);
         }
 
-        // 2. Aplicar búsqueda por título
-        if (this.terminoBusqueda) {
+        if (this.terminoBusqueda.trim() !== '') {
             tareasFiltradas = tareasFiltradas.filter(t => 
                 t.titulo.toLowerCase().includes(this.terminoBusqueda.toLowerCase())
             );
         }
 
-        this.view.renderizar(tareasFiltradas);
+        const estadisticas = {
+            total: this.tareas.length,
+            pendientes: this.tareas.filter(t => !t.completada).length,
+            completadas: this.tareas.filter(t => t.completada).length
+        };
+
+        this.view.renderizar(tareasFiltradas, estadisticas);
     }
 
-    handleBuscarTarea(termino: string) {
-        this.terminoBusqueda = termino;
-        this.renderizarActualizado();
-    }
-
-    handleFiltrarTarea(filtro: string) {
-        this.filtroActual = filtro;
-        this.renderizarActualizado();
-    }
-
-    handleAgregarTarea(titulo: string, descripcion: string) {
-        const nuevaTarea = new Tarea(crypto.randomUUID(), titulo, descripcion);
-        this.tareas.push(nuevaTarea);
+    handleAgregarTarea(titulo: string, descripcion: string, prioridad: 'Baja' | 'Media' | 'Alta') {
+        const nuevaTarea = new Tarea(crypto.randomUUID(), titulo, descripcion, prioridad);
+        this.tareas.unshift(nuevaTarea);
         this.storage.guardar(this.tareas);
-        this.renderizarActualizado();
+        this.actualizarVistaGeneral();
     }
 
     handleEliminarTarea(id: string) {
         this.tareas = this.tareas.filter(t => t.id !== id);
         this.storage.guardar(this.tareas);
-        this.renderizarActualizado();
+        this.actualizarVistaGeneral();
     }
 
     handleToggleTarea(id: string) {
@@ -73,7 +65,23 @@ export class TareaController {
         if (tarea) {
             tarea.completada = !tarea.completada;
             this.storage.guardar(this.tareas);
-            this.renderizarActualizado();
+            this.actualizarVistaGeneral();
         }
+    }
+
+    handleBuscarTarea(termino: string) {
+        this.terminoBusqueda = termino;
+        this.actualizarVistaGeneral();
+    }
+
+    handleFiltrarTarea(filtro: string) {
+        this.filtroActual = filtro;
+        this.actualizarVistaGeneral();
+    }
+
+    handleEliminarCompletadas() {
+        this.tareas = this.tareas.filter(t => !t.completada);
+        this.storage.guardar(this.tareas);
+        this.actualizarVistaGeneral();
     }
 }

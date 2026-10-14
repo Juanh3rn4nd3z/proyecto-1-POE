@@ -3,29 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Tareas MVC</title>
+    <title>Gestor de Tareas</title>
     <link rel="stylesheet" href="src/styles/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Mis Tareas</h1>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Gestionador de Tareas</h1>
+            <p class="subtitulo">Sistema de Gestion de Tareas</p>
+        </header>
+
+        <div class="stats-panel">
+            <div class="stat-card">
+                <span class="stat-number" id="total-count">0</span>
+                <span class="stat-label">Totales</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="pending-count">0</span>
+                <span class="stat-label">Pendientes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="completed-count">0</span>
+                <span class="stat-label">Completadas</span>
+            </div>
+        </div>
         
-        <form id="form-tarea">
-            <input type="text" id="titulo" placeholder="Título de la tarea" required>
-            <input type="text" id="descripcion" placeholder="Descripción" required>
-            <button type="submit">Agregar Tarea</button>
+        <form id="form-tarea" class="task-form">
+            <div class="input-group">
+                <input type="text" id="titulo" placeholder="Titulo de la tarea..." required autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="text" id="descripcion" placeholder="Descripcion detallada..." required autocomplete="off">
+            </div>
+            <div class="input-row">
+                <select id="prioridad" required>
+                    <option value="" disabled selected>Prioridad</option>
+                    <option value="Baja">Baja</option>
+                    <option value="Media">Media</option>
+                    <option value="Alta">Alta</option>
+                </select>
+                <button type="submit" class="btn-primary">Agregar Tarea</button>
+            </div>
         </form>
 
-        <div class="controles">
-            <input type="text" id="buscador" placeholder="🔍 Buscar por título...">
+        <div class="controls-bar">
+            <input type="text" id="buscador" placeholder="Buscar por titulo..." autocomplete="off">
             <select id="filtro-estado">
-                <option value="todas">Todas</option>
+                <option value="todas">Ver Todas</option>
                 <option value="pendientes">Pendientes</option>
                 <option value="completadas">Completadas</option>
             </select>
         </div>
 
-        <ul id="lista-tareas"></ul>
+        <button id="btn-limpiar-completadas" class="btn-danger-outline">Eliminar Tareas Completadas</button>
+
+        <ul id="lista-tareas" class="task-list"></ul>
     </div>
 
     <script type="module" src="./dist/main.js"></script>

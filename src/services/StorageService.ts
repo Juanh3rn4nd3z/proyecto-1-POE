@@ -1,16 +1,21 @@
 export class StorageService<T> {
-    private key: string;
-
-    constructor(key: string) {
-        this.key = key;
-    }
+    constructor(private key: string) {}
 
     guardar(datos: T[]): void {
-        localStorage.setItem(this.key, JSON.stringify(datos));
+        try {
+            localStorage.setItem(this.key, JSON.stringify(datos));
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     cargar(): T[] {
-        const datos = localStorage.getItem(this.key);
-        return datos ? JSON.parse(datos) : [];
+        try {
+            const datos = localStorage.getItem(this.key);
+            return datos ? JSON.parse(datos) : [];
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
     }
 }

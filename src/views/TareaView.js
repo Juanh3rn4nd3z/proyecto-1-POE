@@ -31,7 +31,6 @@ export class TareaView {
             }
         });
     }
-    bindToggleTarea(handler) {
         this.listaElement.addEventListener('change', (e) => {
             const target = e.target;
             if (target.type === 'checkbox') {
