@@ -8,7 +8,7 @@ export class StorageService {
             localStorage.setItem(this.key, JSON.stringify(datos));
         }
         catch (error) {
-            console.error(error);
+            console.error('Error al guardar en localStorage:', error);
         }
     }
     cargar() {
@@ -17,7 +17,7 @@ export class StorageService {
             return datos ? JSON.parse(datos) : [];
         }
         catch (error) {
-            console.error(error);
+            console.error('Error al cargar de localStorage:', error);
             return [];
         }
     }

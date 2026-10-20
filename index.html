@@ -3,61 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Tareas</title>
+    <title>TaskMaster Pro</title>
     <link rel="stylesheet" href="src/styles/styles.css">
 </head>
 <body>
+    <div id="toast-container" class="toast-container"></div>
+
     <div class="app-container">
         <header class="app-header">
-            <h1>Gestionador de Tareas</h1>
-            <p class="subtitulo">Sistema de Gestion de Tareas</p>
+            <h1>Gestionador De Tareas</h1>
+            <p class="subtitulo">Sistema Avanzado de Gestión de Tareas</p>
         </header>
 
-        <div class="stats-panel">
+        <div class="tabs-bar">
+            <button type="button" class="tab-btn active" data-vista="vista-principal">Lista de Tareas</button>
+            <button type="button" class="tab-btn" data-vista="vista-resumen">Estadísticas</button>
+        </div>
+
+        <div class="stats-panel vista-seccion" id="vista-resumen">
             <div class="stat-card">
                 <span class="stat-number" id="total-count">0</span>
                 <span class="stat-label">Totales</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" id="pending-count">0</span>
-                <span class="stat-label">Pendientes</span>
             </div>
             <div class="stat-card">
                 <span class="stat-number" id="completed-count">0</span>
                 <span class="stat-label">Completadas</span>
             </div>
         </div>
-        
-        <form id="form-tarea" class="task-form">
-            <div class="input-group">
-                <input type="text" id="titulo" placeholder="Titulo de la tarea..." required autocomplete="off">
+
+        <div class="vista-seccion active" id="vista-principal">
+            <div class="stat-card" style="margin-bottom: 20px;">
+                <span class="stat-number" id="pending-count">0</span>
+                <span class="stat-label">Tareas Pendientes</span>
             </div>
-            <div class="input-group">
-                <input type="text" id="descripcion" placeholder="Descripcion detallada..." required autocomplete="off">
+            
+            <form id="form-tarea" class="task-form" novalidate>
+                <div class="input-group">
+                    <input type="text" id="titulo" placeholder="Titulo de la tarea..." required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <input type="text" id="descripcion" placeholder="Descripcion detallada..." required autocomplete="off">
+                </div>
+                <div class="input-row">
+                    <div class="field-wrapper">
+                        <label for="fecha-limite">Fecha Límite</label>
+                        <input type="date" id="fecha-limite" required>
+                    </div>
+                    <div class="field-wrapper">
+                        <label for="hora-limite">Hora Límite</label>
+                        <input type="time" id="hora-limite" required>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <select id="prioridad" required>
+                        <option value="" disabled selected>Prioridad</option>
+                        <option value="Baja">Baja</option>
+                        <option value="Media">Media</option>
+                        <option value="Alta">Alta</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email-responsable" placeholder="Correo del responsable..." required autocomplete="off">
+                </div>
+                <div class="input-actions-row">
+                    <button type="submit" id="btn-submit" class="btn-primary">Agregar Tarea</button>
+                    <button type="button" id="btn-cancelar-edicion" class="btn-delete" style="display: none;">Cancelar</button>
+                </div>
+            </form>
+
+            <div class="controls-bar">
+                <input type="text" id="buscador" placeholder="Buscar por titulo..." autocomplete="off">
             </div>
-            <div class="input-row">
-                <select id="prioridad" required>
-                    <option value="" disabled selected>Prioridad</option>
-                    <option value="Baja">Baja</option>
-                    <option value="Media">Media</option>
-                    <option value="Alta">Alta</option>
+
+            <div class="controls-bar responsive-filters">
+                <select id="filtro-estado">
+                    <option value="todas">Estado: Todas</option>
+                    <option value="pendientes">Pendientes</option>
+                    <option value="completadas">Completadas</option>
                 </select>
-                <button type="submit" class="btn-primary">Agregar Tarea</button>
+                <select id="filtro-prioridad">
+                    <option value="todas">Prioridad: Todas</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Media">Media</option>
+                    <option value="Baja">Baja</option>
+                </select>
+                <select id="ordenar-por">
+                    <option value="ninguno">Ordenar por...</option>
+                    <option value="fecha">Fecha Límite</option>
+                    <option value="prioridad">Prioridad</option>
+                </select>
             </div>
-        </form>
 
-        <div class="controls-bar">
-            <input type="text" id="buscador" placeholder="Buscar por titulo..." autocomplete="off">
-            <select id="filtro-estado">
-                <option value="todas">Ver Todas</option>
-                <option value="pendientes">Pendientes</option>
-                <option value="completadas">Completadas</option>
-            </select>
+            <button id="btn-limpiar-completadas" class="btn-danger-outline">Eliminar Tareas Completadas</button>
+
+            <ul id="lista-tareas" class="task-list"></ul>
         </div>
-
-        <button id="btn-limpiar-completadas" class="btn-danger-outline">Eliminar Tareas Completadas</button>
-
-        <ul id="lista-tareas" class="task-list"></ul>
     </div>
 
     <script type="module" src="./dist/main.js"></script>

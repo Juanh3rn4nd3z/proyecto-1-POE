@@ -5,37 +5,128 @@ export class TareaView {
     private formElement: HTMLFormElement;
     private buscadorElement: HTMLInputElement;
     private filtroElement: HTMLSelectElement;
+    private filtroPrioridadElement: HTMLSelectElement;
+    private ordenarElement: HTMLSelectElement;
     private btnLimpiarCompletadas: HTMLButtonElement;
+    private btnSubmit: HTMLButtonElement;
+    private btnCancelarEdicion: HTMLButtonElement;
     private totalCountEl: HTMLElement;
     private pendingCountEl: HTMLElement;
     private completedCountEl: HTMLElement;
+    private toastContainer: HTMLElement;
+
+    private editandoId: string | null = null;
 
     constructor() {
         this.listaElement = document.getElementById('lista-tareas')!;
         this.formElement = document.getElementById('form-tarea') as HTMLFormElement;
         this.buscadorElement = document.getElementById('buscador') as HTMLInputElement;
         this.filtroElement = document.getElementById('filtro-estado') as HTMLSelectElement;
+        this.filtroPrioridadElement = document.getElementById('filtro-prioridad') as HTMLSelectElement;
+        this.ordenarElement = document.getElementById('ordenar-por') as HTMLSelectElement;
         this.btnLimpiarCompletadas = document.getElementById('btn-limpiar-completadas') as HTMLButtonElement;
+        this.btnSubmit = document.getElementById('btn-submit') as HTMLButtonElement;
+        this.btnCancelarEdicion = document.getElementById('btn-cancelar-edicion') as HTMLButtonElement;
         this.totalCountEl = document.getElementById('total-count')!;
         this.pendingCountEl = document.getElementById('pending-count')!;
         this.completedCountEl = document.getElementById('completed-count')!;
+        this.toastContainer = document.getElementById('toast-container')!;
+
+        const fechaInput = document.getElementById('fecha-limite') as HTMLInputElement;
+        fechaInput?.addEventListener('click', () => {
+            if ('showPicker' in HTMLInputElement.prototype) {
+                try {
+                    fechaInput.showPicker();
+                } catch (e) {}
+            }
+        });
+
+        this.configurarPestanas();
     }
 
-    bindAgregarTarea(handler: (titulo: string, desc: string, prioridad: 'Baja' | 'Media' | 'Alta') => void) {
+    private configurarPestanas() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const vistas = document.querySelectorAll('.vista-seccion');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                vistas.forEach(v => v.classList.remove('active'));
+
+                tab.classList.add('active');
+                const destino = tab.getAttribute('data-vista')!;
+                document.getElementById(destino)?.classList.add('active');
+            });
+        });
+    }
+
+    mostrarNotificacion(mensaje: string, tipo: 'exito' | 'error' = 'exito') {
+        const alerta = document.createElement('div');
+        alerta.className = `notificacion ${tipo}`;
+        alerta.textContent = mensaje;
+        this.toastContainer.appendChild(alerta);
+
+        setTimeout(() => {
+            alerta.remove();
+        }, 3000);
+    }
+
+    renderEditForm(tarea: ITarea) {
+        this.editandoId = tarea.id;
+        (document.getElementById('titulo') as HTMLInputElement).value = tarea.titulo;
+        (document.getElementById('descripcion') as HTMLInputElement).value = tarea.descripcion;
+        (document.getElementById('prioridad') as HTMLSelectElement).value = tarea.prioridad;
+        
+        const fechaIso = convertirAISO(tarea.fechaLimite);
+        (document.getElementById('fecha-limite') as HTMLInputElement).value = fechaIso;
+        
+        const horaInputVal = convertirA24Horas(tarea.horaLimite);
+        (document.getElementById('hora-limite') as HTMLInputElement).value = horaInputVal;
+        
+        (document.getElementById('email-responsable') as HTMLInputElement).value = tarea.emailResponsable || '';
+
+        this.btnSubmit.textContent = 'Actualizar';
+        this.btnCancelarEdicion.style.display = 'block';
+        this.formElement.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    limpiarFormulario() {
+        this.editandoId = null;
+        this.formElement.reset();
+        this.btnSubmit.textContent = 'Agregar Tarea';
+        this.btnCancelarEdicion.style.display = 'none';
+    }
+
+    renderCounter(estadisticas: { total: number, pendientes: number, completadas: number }) {
+        this.totalCountEl.textContent = estadisticas.total.toString();
+        this.pendingCountEl.textContent = estadisticas.pendientes.toString();
+        this.completedCountEl.textContent = estadisticas.completadas.toString();
+    }
+
+    bindFormularioTarea(
+        onAgregar: (titulo: string, desc: string, prioridad: 'Baja' | 'Media' | 'Alta', fecha: string, hora: string, email: string) => boolean,
+        onActualizar: (id: string, titulo: string, desc: string, prioridad: 'Baja' | 'Media' | 'Alta', fecha: string, hora: string, email: string) => boolean
+    ) {
         this.formElement.addEventListener('submit', (e) => {
             e.preventDefault();
-            const tituloInput = document.getElementById('titulo') as HTMLInputElement;
-            const descInput = document.getElementById('descripcion') as HTMLInputElement;
-            const prioridadSelect = document.getElementById('prioridad') as HTMLSelectElement;
+            const titulo = (document.getElementById('titulo') as HTMLInputElement).value.trim();
+            const descripcion = (document.getElementById('descripcion') as HTMLInputElement).value.trim();
+            const prioridad = (document.getElementById('prioridad') as HTMLSelectElement).value as 'Baja' | 'Media' | 'Alta';
+            const fechaLimite = (document.getElementById('fecha-limite') as HTMLInputElement).value;
+            const horaLimite = (document.getElementById('hora-limite') as HTMLInputElement).value;
+            const email = (document.getElementById('email-responsable') as HTMLInputElement).value.trim();
 
-            const titulo = tituloInput.value.trim();
-            const descripcion = descInput.value.trim();
-            const prioridad = prioridadSelect.value as 'Baja' | 'Media' | 'Alta';
-
-            if (titulo && descripcion && prioridad) {
-                handler(titulo, descripcion, prioridad);
-                this.formElement.reset();
+            if (this.editandoId) {
+                const exito = onActualizar(this.editandoId, titulo, descripcion, prioridad, fechaLimite, horaLimite, email);
+                if (exito) this.limpiarFormulario();
+            } else {
+                const exito = onAgregar(titulo, descripcion, prioridad, fechaLimite, horaLimite, email);
+                if (exito) this.limpiarFormulario();
             }
+        });
+
+        this.btnCancelarEdicion.addEventListener('click', () => {
+            this.limpiarFormulario();
         });
     }
 
@@ -46,6 +137,19 @@ export class TareaView {
                 const li = target.closest('.task-item');
                 const id = li?.getAttribute('data-id');
                 if (id && confirm('¿Desea eliminar esta tarea?')) {
+                    handler(id);
+                }
+            }
+        });
+    }
+
+    bindEditarTarea(handler: (id: string) => void) {
+        this.listaElement.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('btn-edit')) {
+                const li = target.closest('.task-item');
+                const id = li?.getAttribute('data-id');
+                if (id) {
                     handler(id);
                 }
             }
@@ -71,8 +175,14 @@ export class TareaView {
         });
     }
 
-    bindFiltrarTarea(handler: (filtro: string) => void) {
-        this.filtroElement.addEventListener('change', (e) => {
+    bindFiltrarTarea(handler: (estado: string, prioridad: string) => void) {
+        const emitir = () => handler(this.filtroElement.value, this.filtroPrioridadElement.value);
+        this.filtroElement.addEventListener('change', emitir);
+        this.filtroPrioridadElement.addEventListener('change', emitir);
+    }
+
+    bindOrdenarTarea(handler: (orden: string) => void) {
+        this.ordenarElement.addEventListener('change', (e) => {
             handler((e.target as HTMLSelectElement).value);
         });
     }
@@ -85,10 +195,12 @@ export class TareaView {
         });
     }
 
-    renderizar(tareas: ITarea[], estadisticas: { total: number, pendientes: number, completadas: number }) {
-        this.totalCountEl.textContent = estadisticas.total.toString();
-        this.pendingCountEl.textContent = estadisticas.pendientes.toString();
-        this.completedCountEl.textContent = estadisticas.completadas.toString();
+    renderizar(
+        tareas: ITarea[],
+        estadisticas: { total: number, pendientes: number, completadas: number },
+        esVencida: (t: ITarea) => boolean
+    ) {
+        this.renderCounter(estadisticas);
 
         this.listaElement.innerHTML = '';
         
@@ -98,13 +210,19 @@ export class TareaView {
         }
 
         tareas.forEach(tarea => {
+            const vencida = esVencida(tarea);
             const li = document.createElement('li');
-            li.className = `task-item ${tarea.completada ? 'completada' : ''}`;
+            li.className = `task-item ${tarea.completada ? 'completada' : ''} ${vencida ? 'vencida' : ''}`;
             li.setAttribute('data-id', tarea.id);
 
             let badgeClass = 'prioridad-baja';
             if (tarea.prioridad === 'Alta') badgeClass = 'prioridad-alta';
             if (tarea.prioridad === 'Media') badgeClass = 'prioridad-media';
+
+            const alertaVencida = vencida ? `<span class="badge-vencida">Vencida</span>` : '';
+            const fechaHoraTexto = tarea.fechaLimite 
+                ? `${tarea.fechaLimite} a las ${tarea.horaLimite || '00:00 AM'}` 
+                : 'Sin fecha límite';
 
             li.innerHTML = `
                 <input type="checkbox" ${tarea.completada ? 'checked' : ''} class="task-checkbox">
@@ -112,11 +230,17 @@ export class TareaView {
                     <div class="task-header-row">
                         <span class="task-title">${escapeHTML(tarea.titulo)}</span>
                         <span class="badge-prioridad ${badgeClass}">${tarea.prioridad}</span>
+                        ${alertaVencida}
                     </div>
                     <span class="task-desc">${escapeHTML(tarea.descripcion)}</span>
-                    <span class="task-meta">Creada: ${tarea.fechaCreacion}</span>
+                    <span class="task-meta">
+                        Vence: ${fechaHoraTexto} | Resp: ${escapeHTML(tarea.emailResponsable || 'N/A')}
+                    </span>
                 </div>
-                <button class="btn-delete">Eliminar</button>
+                <div class="task-actions">
+                    <button class="btn-edit" type="button">Editar</button>
+                    <button class="btn-delete" type="button">Eliminar</button>
+                </div>
             `;
             this.listaElement.appendChild(li);
         });
@@ -127,4 +251,27 @@ function escapeHTML(str: string): string {
     return str.replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
     );
+}
+
+function convertirA24Horas(horaAmPm: string): string {
+    if (!horaAmPm || !horaAmPm.includes('M')) return horaAmPm;
+    const partes = horaAmPm.split(' ');
+    const tiempo = partes[0].split(':');
+    let horas = parseInt(tiempo[0], 10);
+    const minutos = tiempo[1];
+    const ampm = partes[1];
+
+    if (ampm === 'PM' && horas < 12) horas += 12;
+    if (ampm === 'AM' && horas === 12) horas = 0;
+
+    return `${horas < 10 ? '0' + horas : horas}:${minutos}`;
+}
+
+function convertirAISO(fechaDDMMAAAA: string): string {
+    if (!fechaDDMMAAAA || !fechaDDMMAAAA.includes('/')) return fechaDDMMAAAA;
+    const partes = fechaDDMMAAAA.split('/');
+    if (partes.length === 3) {
+        return `${partes[2]}-${partes[1]}-${partes[0]}`;
+    }
+    return fechaDDMMAAAA;
 }
